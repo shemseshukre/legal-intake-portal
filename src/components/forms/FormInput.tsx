@@ -4,6 +4,7 @@ interface FormInputProps {
   value: string;
   placeholder?: string;
   type?: 'text' | 'email' | 'date';
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
   required?: boolean;
   error?: string;
   onChange: (value: string) => void;
@@ -15,6 +16,7 @@ function FormInput({
   value,
   placeholder,
   type = 'text',
+  inputMode,
   required = false,
   error,
   onChange,
@@ -25,7 +27,10 @@ function FormInput({
         {label}
 
         {required && (
-          <span className="required-mark" aria-hidden="true">
+          <span
+            className="required-mark"
+            aria-hidden="true"
+          >
             *
           </span>
         )}
@@ -37,15 +42,25 @@ function FormInput({
         type={type}
         value={value}
         placeholder={placeholder}
+        inputMode={inputMode}
         required={required}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className={`form-input ${error ? 'form-input--error' : ''}`}
-        onChange={(event) => onChange(event.target.value)}
+        aria-describedby={
+          error ? `${id}-error` : undefined
+        }
+        className={`form-input ${
+          error ? 'form-input--error' : ''
+        }`}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
       />
 
       {error && (
-        <p id={`${id}-error`} className="form-error">
+        <p
+          id={`${id}-error`}
+          className="form-error"
+        >
           {error}
         </p>
       )}
@@ -54,3 +69,4 @@ function FormInput({
 }
 
 export default FormInput;
+

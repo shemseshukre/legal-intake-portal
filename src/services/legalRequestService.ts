@@ -33,7 +33,11 @@ function getDrafts(): SavedDraft[] {
     return [];
   }
 
-  return JSON.parse(storedDrafts) as SavedDraft[];
+  try {
+    return JSON.parse(storedDrafts) as SavedDraft[];
+  } catch {
+    return [];
+  }
 }
 
 function getSubmittedRequests(): SubmittedRequest[] {
@@ -45,9 +49,13 @@ function getSubmittedRequests(): SubmittedRequest[] {
     return [];
   }
 
-  return JSON.parse(
-    storedRequests,
-  ) as SubmittedRequest[];
+  try {
+    return JSON.parse(
+      storedRequests,
+    ) as SubmittedRequest[];
+  } catch {
+    return [];
+  }
 }
 
 export function saveLegalRequestDraft(
@@ -74,9 +82,17 @@ export function saveLegalRequestDraft(
   return draft;
 }
 
-export function submitLegalRequest(
+export async function submitLegalRequest(
   data: LegalRequest,
-): SubmittedRequest {
+): Promise<SubmittedRequest> {
+  /*
+   * Simulate a real API request so the UI can display
+   * the loading state during submission.
+   */
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 1200);
+  });
+
   const requests = getSubmittedRequests();
 
   const submittedRequest: SubmittedRequest = {
@@ -102,3 +118,4 @@ export function getSavedDrafts(): SavedDraft[] {
 export function getSubmittedLegalRequests(): SubmittedRequest[] {
   return getSubmittedRequests();
 }
+

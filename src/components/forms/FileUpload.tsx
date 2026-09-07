@@ -4,10 +4,10 @@ interface FileUploadProps {
   file: File | null;
   accept?: string;
   error?: string;
-  onChange: (file: File | null) => void;
+  onFileChange: (file: File | null) => void;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 const ALLOWED_FILE_TYPES = [
   'application/pdf',
@@ -31,7 +31,7 @@ function FileUpload({
   file,
   accept,
   error,
-  onChange,
+  onFileChange,
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,7 +51,7 @@ function FileUpload({
 
     if (selectedFile.size > MAX_FILE_SIZE) {
       setLocalError(
-        'File size must be 10 MB or less.',
+        'File size must be 50 MB or less.',
       );
 
       return false;
@@ -70,9 +70,9 @@ function FileUpload({
     }
 
     if (validateFile(selectedFile)) {
-      onChange(selectedFile);
+      onFileChange(selectedFile);
     } else {
-      onChange(null);
+      onFileChange(null);
 
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -98,7 +98,7 @@ function FileUpload({
   };
 
   const handleRemove = () => {
-    onChange(null);
+    onFileChange(null);
     setLocalError('');
 
     if (fileInputRef.current) {
@@ -110,15 +110,12 @@ function FileUpload({
 
   return (
     <div className="form-field">
-<div className="file-label-row">
-  <span className="form-label">
-    Supporting Document
-  </span>
-
-  <span className="optional-label">
-    Optional
-  </span>
-</div>
+      <label
+        htmlFor="supporting-file"
+        className="form-label"
+      >
+        Upload Contract
+      </label>
 
       {!file ? (
         <label
@@ -136,13 +133,21 @@ function FileUpload({
             id="supporting-file"
             name="supporting-file"
             type="file"
-            accept={accept}
+            accept={
+              accept ||
+              '.pdf,.doc,.docx'
+            }
             onChange={(event) => {
               const selectedFile =
                 event.target.files?.[0] ?? null;
 
               handleFileChange(selectedFile);
             }}
+            aria-describedby={
+              displayedError
+                ? 'supporting-file-error'
+                : undefined
+            }
           />
 
           <span
@@ -157,12 +162,15 @@ function FileUpload({
           </span>
 
           <span className="file-upload-hint">
-            PDF, DOC, DOCX up to 10MB
+            PDF, DOC, DOCX up to 50MB
           </span>
         </label>
       ) : (
         <div className="selected-file">
-          <div className="selected-file-icon">
+          <div
+            className="selected-file-icon"
+            aria-hidden="true"
+          >
             📄
           </div>
 
@@ -186,7 +194,10 @@ function FileUpload({
       )}
 
       {displayedError && (
-        <p className="form-error">
+        <p
+          className="form-error"
+          id="supporting-file-error"
+        >
           {displayedError}
         </p>
       )}
@@ -195,3 +206,4 @@ function FileUpload({
 }
 
 export default FileUpload;
+

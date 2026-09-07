@@ -20,51 +20,110 @@ describe('LegalIntakePage', () => {
 
     await user.click(
       screen.getByRole('button', {
-        name: /Legal Research/i,
+        name: /Ask a Legal Question/i,
       }),
     );
 
     expect(
       screen.getByRole('heading', {
-        name: 'Legal Research Request',
+        name: 'Legal Question',
       }),
     ).toBeInTheDocument();
 
     await user.click(
       screen.getByRole('button', {
-        name: /Compliance/i,
+        name: /Privacy Request/i,
       }),
     );
 
     expect(
       screen.getByRole('heading', {
-        name: 'Compliance Request',
+        name: 'Privacy Request',
       }),
     ).toBeInTheDocument();
 
     await user.click(
       screen.getByRole('button', {
-        name: /^Other/i,
+        name: /Employment Matter/i,
       }),
     );
 
     expect(
       screen.getByRole('heading', {
-        name: 'Other Legal Request',
+        name: 'Employment Matter',
       }),
     ).toBeInTheDocument();
 
     await user.click(
       screen.getByRole('button', {
-        name: /Contract Review/i,
+        name: /Intellectual Property/i,
       }),
     );
 
     expect(
       screen.getByRole('heading', {
-        name: 'Request Details',
+        name: 'Intellectual Property',
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /Corporate Legal Request/i,
+      }),
+    );
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'Corporate Legal Request',
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /Policy Review/i,
+      }),
+    );
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'Policy Review',
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /Report a Legal Issue/i,
+      }),
+    );
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'Report a Legal Issue',
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /Request an NDA/i,
+      }),
+    );
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'NDA Request',
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /Review a Contract/i,
+      }),
+    );
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'Contract Review Request',
       }),
     ).toBeInTheDocument();
   });
 });
-

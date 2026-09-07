@@ -1,8 +1,13 @@
 export type RequestType =
   | 'contract-review'
-  | 'legal-research'
-  | 'compliance'
-  | 'other';
+  | 'nda-request'
+  | 'legal-question'
+  | 'privacy-request'
+  | 'employment-matter'
+  | 'intellectual-property'
+  | 'corporate-legal-request'
+  | 'policy-review'
+  | 'legal-issue';
 
 export type Priority =
   | 'low'
@@ -16,6 +21,19 @@ export type ContractType =
   | 'partnership'
   | 'other';
 
+export type CustomerType =
+  | 'new'
+  | 'existing';
+
+export type RiskLevel =
+  | 'low'
+  | 'medium'
+  | 'high';
+
+export type PersonalDataInvolved =
+  | 'yes'
+  | 'no';
+
 export interface LegalRequest {
   requestType: RequestType;
   title: string;
@@ -24,7 +42,13 @@ export interface LegalRequest {
   description: string;
   requesterName: string;
   requesterEmail: string;
+  businessUnit: string;
+  counterparty: string;
+  contractValue: string;
   dueDate: string;
+  personalDataInvolved: PersonalDataInvolved;
+  customerType: CustomerType;
+  riskLevel: RiskLevel;
   file: File | null;
 }
 
@@ -36,7 +60,13 @@ export interface LegalRequestFormData {
   description: string;
   requesterName: string;
   requesterEmail: string;
+  businessUnit: string;
+  counterparty: string;
+  contractValue: string;
   dueDate: string;
+  personalDataInvolved: PersonalDataInvolved | '';
+  customerType: CustomerType | '';
+  riskLevel: RiskLevel | '';
   file: File | null;
 }
 

@@ -1,3 +1,15 @@
+import {
+  Building2,
+  CircleHelp,
+  ClipboardList,
+  Copyright,
+  FileText,
+  Shield,
+  ShieldCheck,
+  TriangleAlert,
+  Users,
+} from 'lucide-react';
+
 import type { RequestType } from '../../types/legalRequest';
 import RequestTypeCard from './RequestTypeCard';
 
@@ -12,31 +24,61 @@ const requestTypes: {
   id: RequestType;
   title: string;
   description: string;
-  icon: string;
+  icon: typeof FileText;
 }[] = [
   {
     id: 'contract-review',
-    title: 'Contract Review',
-    description: 'Review contracts and agreements',
-    icon: '📄',
+    title: 'Review a Contract',
+    description: 'Request legal review of a contract or agreement',
+    icon: FileText,
   },
   {
-    id: 'legal-research',
-    title: 'Legal Research',
-    description: 'Research legal questions and issues',
-    icon: '🔍',
+    id: 'nda-request',
+    title: 'Request an NDA',
+    description: 'Create or review a Non-Disclosure Agreement',
+    icon: ShieldCheck,
   },
   {
-    id: 'compliance',
-    title: 'Compliance',
-    description: 'Compliance and regulatory requests',
-    icon: '✓',
+    id: 'legal-question',
+    title: 'Ask a Legal Question',
+    description: 'Get legal advice on a specific issue',
+    icon: CircleHelp,
   },
   {
-    id: 'other',
-    title: 'Other',
-    description: 'Other legal requests',
-    icon: '•••',
+    id: 'privacy-request',
+    title: 'Privacy Request',
+    description: 'Request related to data privacy (GDPR, CCPA)',
+    icon: Shield,
+  },
+  {
+    id: 'employment-matter',
+    title: 'Employment Matter',
+    description: 'Employment-related legal request',
+    icon: Users,
+  },
+  {
+    id: 'intellectual-property',
+    title: 'Intellectual Property',
+    description: 'IP, trademark or copyright related request',
+    icon: Copyright,
+  },
+  {
+    id: 'corporate-legal-request',
+    title: 'Corporate Legal Request',
+    description: 'Corporate governance or legal matters',
+    icon: Building2,
+  },
+  {
+    id: 'policy-review',
+    title: 'Policy Review',
+    description: 'Request review of company policies',
+    icon: ClipboardList,
+  },
+  {
+    id: 'legal-issue',
+    title: 'Report a Legal Issue',
+    description: 'Report a compliance or legal issue',
+    icon: TriangleAlert,
   },
 ];
 
@@ -46,9 +88,7 @@ function RequestTypeSidebar({
   isOpen,
   onClose,
 }: RequestTypeSidebarProps) {
-  const handleRequestTypeChange = (
-    requestType: RequestType,
-  ) => {
+  const handleRequestTypeChange = (requestType: RequestType) => {
     onRequestTypeChange(requestType);
     onClose();
   };
@@ -74,8 +114,7 @@ function RequestTypeSidebar({
             <div>
               <h2>Request Type</h2>
               <p>
-                Select the type of legal assistance you
-                need.
+                Select the type of legal assistance you need.
               </p>
             </div>
 
@@ -102,9 +141,7 @@ function RequestTypeSidebar({
                   selectedRequestType === requestType.id
                 }
                 onClick={() =>
-                  handleRequestTypeChange(
-                    requestType.id,
-                  )
+                  handleRequestTypeChange(requestType.id)
                 }
               />
             ))}

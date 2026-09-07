@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { CircleAlert } from 'lucide-react';
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -19,9 +21,6 @@ function ConfirmationDialog({
   onConfirm,
   onCancel,
 }: ConfirmationDialogProps) {
-  const dialogRef =
-    useRef<HTMLDivElement>(null);
-
   const cancelButtonRef =
     useRef<HTMLButtonElement>(null);
 
@@ -62,29 +61,62 @@ function ConfirmationDialog({
     return null;
   }
 
-  return (
+  const dialogContent = (
     <div
       className="dialog-overlay"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        boxSizing: 'border-box',
+        backgroundColor:
+          'rgba(15, 23, 42, 0.45)',
+        zIndex: 99999,
+      }}
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
+        if (
+          event.target === event.currentTarget
+        ) {
           onCancel();
         }
       }}
     >
       <div
-        ref={dialogRef}
         className="confirmation-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirmation-dialog-title"
         aria-describedby="confirmation-dialog-message"
-        tabIndex={-1}
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '460px',
+          margin: 0,
+          padding: '28px',
+          boxSizing: 'border-box',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '14px',
+          boxShadow:
+            '0 20px 50px rgba(15, 23, 42, 0.2)',
+        }}
       >
         <div
           className="confirmation-dialog-icon"
           aria-hidden="true"
         >
-          ?
+          <CircleAlert
+            size={22}
+            strokeWidth={2}
+          />
         </div>
 
         <div className="confirmation-dialog-content">
@@ -117,6 +149,11 @@ function ConfirmationDialog({
         </div>
       </div>
     </div>
+  );
+
+  return createPortal(
+    dialogContent,
+    document.body,
   );
 }
 

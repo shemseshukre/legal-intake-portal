@@ -1,22 +1,32 @@
 import { useState } from 'react';
-import type {
-  ContractType,
-  FormErrors,
-  LegalRequest,
-  LegalRequestFormData,
-  Priority,
-} from '../../types/legalRequest';
+import { Send } from 'lucide-react';
+
 import ConfirmationDialog from '../ConfirmationDialog';
-import FormActions from './FormActions';
 import FileUpload from './FileUpload';
 import FormInput from './FormInput';
 import FormSelect from './FormSelect';
 import RadioGroup from './RadioGroup';
 import TextArea from './TextArea';
 
+import type {
+  ContractType,
+  CustomerType,
+  LegalRequestFormData,
+  PersonalDataInvolved,
+  Priority,
+  RiskLevel,
+} from '../../types/legalRequest';
+
 interface ContractReviewFormProps {
-  onSaveDraft: (request: LegalRequestFormData) => void;
-  onSubmit: (request: LegalRequest) => void;
+  onSubmit: (
+    data: LegalRequestFormData,
+  ) => void | Promise<void>;
+
+  onSaveDraft: (
+    data: LegalRequestFormData,
+  ) => void | Promise<void>;
+
+  isSubmitting?: boolean;
 }
 
 const initialFormData: LegalRequestFormData = {
@@ -27,18 +37,62 @@ const initialFormData: LegalRequestFormData = {
   description: '',
   requesterName: '',
   requesterEmail: '',
+  businessUnit: '',
+  counterparty: '',
+  contractValue: '',
   dueDate: '',
+  personalDataInvolved: '',
+  customerType: '',
+  riskLevel: '',
   file: null,
 };
 
-const contractTypeOptions = [
+const businessUnitOptions = [
+  {
+    value: 'sales',
+    label: 'Sales',
+  },
+  {
+    value: 'marketing',
+    label: 'Marketing',
+  },
+  {
+    value: 'finance',
+    label: 'Finance',
+  },
+  {
+    value: 'human-resources',
+    label: 'Human Resources',
+  },
+  {
+    value: 'operations',
+    label: 'Operations',
+  },
+  {
+    value: 'information-technology',
+    label: 'Information Technology',
+  },
+  {
+    value: 'other',
+    label: 'Other',
+  },
+];
+
+const contractTypeOptions: {
+  value: ContractType;
+  label: string;
+}[] = [
+  {
+    value: 'master-service-agreement',
+    label: 'Master Service Agreement',
+  },
   {
     value: 'employment',
-    label: 'Employment Contract',
+    label: 'Employment Agreement',
   },
   {
     value: 'vendor',
-    label: 'Vendor Agreement',
+    label: 'Vendor / Supplier Agreement',
   },
   {
     value: 'nda',
@@ -54,7 +108,10 @@ const contractTypeOptions = [
   },
 ];
 
-const priorityOptions = [
+const riskLevelOptions: {
+  value: RiskLevel;
+  label: string;
+}[] = [
   {
     value: 'low',
     label: 'Low',
@@ -69,119 +126,79 @@ const priorityOptions = [
   },
 ];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-const ALLOWED_FILE_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+const priorityOptions: {
+  value: Priority;
+  label: string;
+}[] = [
+  {
+    value: 'low',
+    label: 'Low',
+  },
+  {
+    value: 'medium',
+    label: 'Medium',
+  },
+  {
+    value: 'high',
+    label: 'High',
+  },
 ];
 
-function validateForm(
-  formData: LegalRequestFormData,
-): FormErrors {
-  const errors: FormErrors = {};
+const personalDataOptions: {
+  value: PersonalDataInvolved;
+  label: string;
+}[] = [
+  {
+    value: 'yes',
+    label: 'Yes',
+  },
+  {
+    value: 'no',
+    label: 'No',
+  },
+];
 
-  if (!formData.title.trim()) {
-    errors.title = 'Request title is required.';
-  }
-
-  if (!formData.contractType) {
-    errors.contractType =
-      'Please select a contract type.';
-  }
-
-  if (!formData.requesterName.trim()) {
-    errors.requesterName =
-      'Requester name is required.';
-  }
-
-  if (!formData.requesterEmail.trim()) {
-    errors.requesterEmail =
-      'Requester email is required.';
-  } else if (
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-      formData.requesterEmail,
-    )
-  ) {
-    errors.requesterEmail =
-      'Please enter a valid email address.';
-  }
-
-  if (!formData.dueDate) {
-    errors.dueDate =
-      'Required date is required.';
-  } else {
-    const selectedDate = new Date(
-      `${formData.dueDate}T00:00:00`,
-    );
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (selectedDate < today) {
-      errors.dueDate =
-        'Required date cannot be in the past.';
-    }
-  }
-
-  if (!formData.priority) {
-    errors.priority =
-      'Please select a priority.';
-  }
-
-  if (!formData.description.trim()) {
-    errors.description =
-      'Description is required.';
-  } else if (
-    formData.description.trim().length < 20
-  ) {
-    errors.description =
-      'Description must contain at least 20 characters.';
-  }
-
-  if (formData.file) {
-    if (
-      !ALLOWED_FILE_TYPES.includes(
-        formData.file.type,
-      )
-    ) {
-      errors.file =
-        'Only PDF, DOC, and DOCX files are allowed.';
-    } else if (
-      formData.file.size > MAX_FILE_SIZE
-    ) {
-      errors.file =
-        'File size must be 10 MB or less.';
-    }
-  }
-
-  return errors;
-}
+const customerTypeOptions: {
+  value: CustomerType;
+  label: string;
+}[] = [
+  {
+    value: 'new',
+    label: 'New Customer',
+  },
+  {
+    value: 'existing',
+    label: 'Existing Customer',
+  },
+];
 
 function ContractReviewForm({
-  onSaveDraft,
   onSubmit,
+  onSaveDraft,
+  isSubmitting = false,
 }: ContractReviewFormProps) {
   const [formData, setFormData] =
     useState<LegalRequestFormData>(
       initialFormData,
     );
 
-  const [errors, setErrors] =
-    useState<FormErrors>({});
+  const [errors, setErrors] = useState<
+    Partial<
+      Record<
+        keyof LegalRequestFormData,
+        string
+      >
+    >
+  >({});
 
-  const [isSubmitting, setIsSubmitting] =
+  const [fileError, setFileError] =
+    useState('');
+
+  const [showConfirmation, setShowConfirmation] =
     useState(false);
-
-  const [isConfirmationOpen, setIsConfirmationOpen] =
-    useState(false);
-
-  const [pendingRequest, setPendingRequest] =
-    useState<LegalRequest | null>(null);
 
   const updateField = <
-    K extends keyof LegalRequestFormData
+    K extends keyof LegalRequestFormData,
   >(
     field: K,
     value: LegalRequestFormData[K],
@@ -192,130 +209,219 @@ function ContractReviewForm({
     }));
 
     setErrors((current) => {
-      const updatedErrors = { ...current };
+      if (!current[field]) {
+        return current;
+      }
 
-      delete updatedErrors[field];
+      const next = { ...current };
+      delete next[field];
 
-      return updatedErrors;
+      return next;
     });
   };
 
-  const handleSubmit = (
-    event: React.FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
+  const validate = () => {
+    const nextErrors: Partial<
+      Record<
+        keyof LegalRequestFormData,
+        string
+      >
+    > = {};
 
+    if (!formData.title.trim()) {
+      nextErrors.title =
+        'Request title is required.';
+    }
+
+    if (!formData.businessUnit) {
+      nextErrors.businessUnit =
+        'Please select a business unit.';
+    }
+
+    if (!formData.counterparty.trim()) {
+      nextErrors.counterparty =
+        'Counter party is required.';
+    }
+
+    if (!formData.contractType) {
+      nextErrors.contractType =
+        'Please select the contract type.';
+    }
+
+    if (!formData.contractValue.trim()) {
+      nextErrors.contractValue =
+        'Contract value is required.';
+    }
+
+    if (!formData.dueDate) {
+      nextErrors.dueDate =
+        'Deadline is required.';
+    }
+
+    if (!formData.personalDataInvolved) {
+      nextErrors.personalDataInvolved =
+        'Please select whether personal data is involved.';
+    }
+
+    if (!formData.customerType) {
+      nextErrors.customerType =
+        'Please select the customer type.';
+    }
+
+    if (!formData.riskLevel) {
+      nextErrors.riskLevel =
+        'Please select a risk level.';
+    }
+
+    if (!formData.priority) {
+      nextErrors.priority =
+        'Please select a priority.';
+    }
+
+    if (!formData.description.trim()) {
+      nextErrors.description =
+        'Description is required.';
+    } else if (
+      formData.description.trim().length < 20
+    ) {
+      nextErrors.description =
+        'Description must be at least 20 characters.';
+    }
+
+    setErrors(nextErrors);
+
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleFileChange = (
+    file: File | null,
+  ) => {
+    setFileError('');
+
+    if (!file) {
+      updateField('file', null);
+      return;
+    }
+
+    const maxFileSize =
+      50 * 1024 * 1024;
+
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+
+    const allowedExtensions =
+      /\.(pdf|doc|docx)$/i;
+
+    if (
+      !allowedTypes.includes(file.type) &&
+      !allowedExtensions.test(file.name)
+    ) {
+      setFileError(
+        'Only PDF, DOC, and DOCX files are allowed.',
+      );
+      return;
+    }
+
+    if (file.size > maxFileSize) {
+      setFileError(
+        'File size must be 50 MB or less.',
+      );
+      return;
+    }
+
+    updateField('file', file);
+  };
+
+  const handleSubmit = () => {
     if (isSubmitting) {
       return;
     }
 
-    const validationErrors =
-      validateForm(formData);
-
-    setErrors(validationErrors);
-
-    if (
-      Object.keys(validationErrors).length > 0
-    ) {
+    if (!validate()) {
       return;
     }
 
-    const validRequest: LegalRequest = {
-      requestType: formData.requestType,
-      title: formData.title.trim(),
-      contractType:
-        formData.contractType as ContractType,
-      priority:
-        formData.priority as Priority,
-      description:
-        formData.description.trim(),
-      requesterName:
-        formData.requesterName.trim(),
-      requesterEmail:
-        formData.requesterEmail.trim(),
-      dueDate: formData.dueDate,
-      file: formData.file,
-    };
-
-    setPendingRequest(validRequest);
-    setIsConfirmationOpen(true);
-  };
-
-  const handleCancelSubmit = () => {
-    setIsConfirmationOpen(false);
-    setPendingRequest(null);
+    setShowConfirmation(true);
   };
 
   const handleConfirmSubmit = async () => {
-    if (!pendingRequest || isSubmitting) {
+    if (isSubmitting) {
       return;
     }
 
-    setIsSubmitting(true);
-    setIsConfirmationOpen(false);
+    setShowConfirmation(false);
 
-    await new Promise((resolve) =>
-      setTimeout(resolve, 1000),
-    );
-
-    onSubmit(pendingRequest);
-
-    setFormData(initialFormData);
-    setErrors({});
-    setPendingRequest(null);
-    setIsSubmitting(false);
+    await onSubmit(formData);
   };
 
-  const handleSaveDraft = () => {
-    onSaveDraft(formData);
+  const handleSaveDraft = async () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    await onSaveDraft(formData);
   };
 
   return (
     <>
       <form
-        className="contract-review-form"
-        onSubmit={handleSubmit}
+        className="legal-request-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSubmit();
+        }}
         noValidate
       >
-        <div className="form-introduction">
-          <div>
-            <h3>Request Details</h3>
-
-            <p>
-              Provide the information below so the
-              legal team can review and process your
-              request.
-            </p>
-          </div>
-
-          <span className="required-fields-note">
-            <span aria-hidden="true">*</span>{' '}
-            Required fields
-          </span>
-        </div>
-
-        <section
-          className="form-section"
-          aria-labelledby="request-details-heading"
-        >
-          <h3
-            id="request-details-heading"
-            className="form-section-title"
-          >
-            Request Information
-          </h3>
-
+        {/* Request Details */}
+        <section className="form-section">
           <div className="form-grid">
             <FormInput
               id="request-title"
               label="Request Title"
               value={formData.title}
-              placeholder="Enter a short title for your request"
-              required
-              error={errors.title}
               onChange={(value) =>
-                updateField('title', value)
+                updateField(
+                  'title',
+                  value,
+                )
               }
+              error={errors.title}
+              required
+              placeholder="Enter request title"
+            />
+
+            <FormSelect
+              id="business-unit"
+              label="Business Unit"
+              value={formData.businessUnit}
+              options={businessUnitOptions}
+              onChange={(value) =>
+                updateField(
+                  'businessUnit',
+                  value,
+                )
+              }
+              error={errors.businessUnit}
+              required
+              placeholder="Select business unit"
+            />
+
+            <FormInput
+              id="counterparty"
+              label="Counter Party"
+              value={formData.counterparty}
+              onChange={(value) =>
+                updateField(
+                  'counterparty',
+                  value,
+                )
+              }
+              error={errors.counterparty}
+              required
+              placeholder="Enter counter party"
             />
 
             <FormSelect
@@ -323,143 +429,227 @@ function ContractReviewForm({
               label="Contract Type"
               value={formData.contractType}
               options={contractTypeOptions}
-              placeholder="Select contract type"
-              required
-              error={errors.contractType}
               onChange={(value) =>
                 updateField(
                   'contractType',
-                  value as ContractType | '',
+                  value as ContractType,
                 )
               }
-            />
-
-            <FormInput
-              id="requester-name"
-              label="Requester Name"
-              value={formData.requesterName}
-              placeholder="Enter your full name"
+              error={errors.contractType}
               required
-              error={errors.requesterName}
-              onChange={(value) =>
-                updateField(
-                  'requesterName',
-                  value,
-                )
-              }
+              placeholder="Select contract type"
             />
 
-            <FormInput
-              id="requester-email"
-              label="Requester Email"
-              type="email"
-              value={formData.requesterEmail}
-              placeholder="name@example.com"
-              required
-              error={errors.requesterEmail}
-              onChange={(value) =>
-                updateField(
-                  'requesterEmail',
-                  value,
-                )
-              }
-            />
+            <div className="currency-field">
+              <FormInput
+                id="contract-value"
+                label="Contract Value"
+                value={formData.contractValue}
+                onChange={(value) =>
+                  updateField(
+                    'contractValue',
+                    value,
+                  )
+                }
+                error={errors.contractValue}
+                required
+                placeholder="0.00"
+                type="text"
+                inputMode="decimal"
+              />
+
+              <span
+                className="currency-symbol"
+                aria-hidden="true"
+              >
+                $
+              </span>
+            </div>
 
             <FormInput
-              id="required-by"
-              label="Required By"
-              type="date"
+              id="deadline"
+              label="Deadline"
               value={formData.dueDate}
-              required
-              error={errors.dueDate}
-              onChange={(value) =>
-                updateField('dueDate', value)
-              }
-            />
-
-            <RadioGroup
-              name="priority"
-              label="Priority"
-              value={formData.priority}
-              options={priorityOptions}
-              required
-              error={errors.priority}
               onChange={(value) =>
                 updateField(
-                  'priority',
-                  value as Priority | '',
+                  'dueDate',
+                  value,
                 )
               }
+              error={errors.dueDate}
+              required
+              type="date"
             />
           </div>
         </section>
 
-        <section
-          className="form-section"
-          aria-labelledby="description-heading"
-        >
-          <h3
-            id="description-heading"
-            className="form-section-title"
-          >
-            Request Description
-          </h3>
+        {/* Additional Information */}
+        <section className="form-section">
+          <div className="form-grid">
+            <RadioGroup
+              name="personal-data"
+              label="Is Personal Data Involved?"
+              value={
+                formData.personalDataInvolved
+              }
+              options={personalDataOptions}
+              onChange={(value) =>
+                updateField(
+                  'personalDataInvolved',
+                  value as PersonalDataInvolved,
+                )
+              }
+              error={
+                errors.personalDataInvolved
+              }
+              required
+            />
 
+            <RadioGroup
+              name="customer-type"
+              label="Is this a New or Existing Customer?"
+              value={formData.customerType}
+              options={customerTypeOptions}
+              onChange={(value) =>
+                updateField(
+                  'customerType',
+                  value as CustomerType,
+                )
+              }
+              error={errors.customerType}
+              required
+            />
+
+            <FormSelect
+              id="risk-level"
+              label="Risk Level"
+              value={formData.riskLevel}
+              options={riskLevelOptions}
+              onChange={(value) =>
+                updateField(
+                  'riskLevel',
+                  value as RiskLevel,
+                )
+              }
+              error={errors.riskLevel}
+              required
+              placeholder="Select risk level"
+            />
+
+            <FormSelect
+              id="priority"
+              label="Priority"
+              value={formData.priority}
+              options={priorityOptions}
+              onChange={(value) =>
+                updateField(
+                  'priority',
+                  value as Priority,
+                )
+              }
+              error={errors.priority}
+              required
+              placeholder="Select priority"
+            />
+          </div>
+        </section>
+
+        {/* Description */}
+        <section className="form-section">
           <TextArea
             id="description"
             label="Description"
             value={formData.description}
-            placeholder="Describe what you need the legal team to review..."
-            maxLength={1000}
-            required
-            error={errors.description}
             onChange={(value) =>
               updateField(
                 'description',
                 value,
               )
             }
+            error={errors.description}
+            required
+            placeholder="Describe your legal request..."
+            maxLength={2000}
           />
         </section>
 
-        <section
-          className="form-section"
-          aria-labelledby="documents-heading"
-        >
-          <h3
-            id="documents-heading"
-            className="form-section-title"
-          >
-            Supporting Documents
-          </h3>
-
+        {/* Upload Contract */}
+        <section className="form-section">
           <FileUpload
             file={formData.file}
-            accept=".pdf,.doc,.docx"
-            error={errors.file}
-            onChange={(file) =>
-              updateField('file', file)
-            }
+            onFileChange={handleFileChange}
+            error={fileError}
           />
         </section>
 
-        <FormActions
-          onSaveDraft={handleSaveDraft}
-          isSubmitting={isSubmitting}
-        />
+        {/* Submission */}
+        <div className="submission-area">
+          <div className="submission-message">
+            <div
+              className="submission-message-icon"
+              aria-hidden="true"
+            >
+              ✓
+            </div>
+
+            <p>
+              After submission you will receive a
+              confirmation email with your request
+              number. You can track the status of your
+              request from your dashboard.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={handleSaveDraft}
+            disabled={isSubmitting}
+          >
+            Save Draft
+          </button>
+
+          <button
+            type="submit"
+            className="button button-primary submit-request-button"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span
+                  className="button-spinner"
+                  aria-hidden="true"
+                />
+                <span>Submitting...</span>
+              </>
+            ) : (
+              <>
+                <Send
+                  size={17}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
+                <span>Submit Request</span>
+              </>
+            )}
+          </button>
+        </div>
       </form>
 
       <ConfirmationDialog
-        isOpen={isConfirmationOpen}
+        isOpen={showConfirmation}
         title="Submit Legal Request?"
-        message="Please confirm that the information you provided is correct. Once submitted, this request will be sent to the legal team for review."
+        message="Are you sure you want to submit this legal request? Please make sure all information is correct before submitting."
         confirmLabel="Confirm Submission"
-        cancelLabel="Review Request"
+        cancelLabel="Cancel"
         onConfirm={handleConfirmSubmit}
-        onCancel={handleCancelSubmit}
+        onCancel={() =>
+          setShowConfirmation(false)
+        }
       />
     </>
   );
 }
 
 export default ContractReviewForm;
+

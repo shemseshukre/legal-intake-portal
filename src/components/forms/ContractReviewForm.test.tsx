@@ -4,37 +4,157 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
+
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+
 import ContractReviewForm from './ContractReviewForm';
+
+const fillValidForm = async () => {
+  const user = userEvent.setup();
+
+  await user.type(
+    screen.getByLabelText(/request title/i),
+    'Review vendor service agreement',
+  );
+
+  await user.selectOptions(
+    screen.getByLabelText(/contract type/i),
+    'vendor',
+  );
+
+  await user.type(
+    screen.getByLabelText(/business unit/i),
+    'Sales',
+  );
+
+  await user.type(
+    screen.getByLabelText(/counterparty/i),
+    'ABC Corporation',
+  );
+
+  await user.type(
+    screen.getByLabelText(/contract value/i),
+    '50000',
+  );
+
+  await user.type(
+    screen.getByLabelText(/requester name/i),
+    'John Smith',
+  );
+
+  await user.type(
+    screen.getByLabelText(/requester email/i),
+    'john.smith@example.com',
+  );
+
+  await user.type(
+    screen.getByLabelText(/required by/i),
+    '2026-12-31',
+  );
+
+  await user.click(
+    screen.getByRole('radio', {
+      name: 'Yes',
+    }),
+  );
+
+  const customerTypeGroup = screen.getByRole('group', {
+    name: /customer type/i,
+  });
+
+  await user.click(
+    customerTypeGroup.querySelector(
+      'input[value="new"]',
+    ) as HTMLElement,
+  );
+
+  const riskLevelGroup = screen.getByRole('group', {
+    name: /risk level/i,
+  });
+
+  await user.click(
+    riskLevelGroup.querySelector(
+      'input[value="medium"]',
+    ) as HTMLElement,
+  );
+
+  const priorityGroup = screen.getByRole('group', {
+    name: 'Priority',
+  });
+
+  await user.click(
+    priorityGroup.querySelector(
+      'input[value="high"]',
+    ) as HTMLElement,
+  );
+
+  await user.type(
+    screen.getByLabelText(/description/i),
+    'Please review the vendor agreement and identify any important legal risks or obligations before signing.',
+  );
+
+  const fileInput =
+    document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+
+  const file = new File(
+    ['test contract content'],
+    'contract.pdf',
+    {
+      type: 'application/pdf',
+    },
+  );
+
+  await user.upload(fileInput, file);
+};
 
 describe('ContractReviewForm', () => {
   it('shows validation errors when submitted empty', async () => {
-    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const onSaveDraft = vi.fn();
 
     render(
       <ContractReviewForm
-        onSaveDraft={vi.fn()}
-        onSubmit={vi.fn()}
+        onSubmit={onSubmit}
+        onSaveDraft={onSaveDraft}
       />,
     );
 
-    const submitButton =
+    fireEvent.click(
       screen.getByRole('button', {
-        name: 'Submit Request',
-      });
-
-    await user.click(submitButton);
+        name: /submit request/i,
+      }),
+    );
 
     expect(
-      screen.getByText(
+      await screen.findByText(
         'Request title is required.',
       ),
     ).toBeInTheDocument();
 
     expect(
       screen.getByText(
-        'Please select a contract type.',
+        'Please select the contract type.',
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        'Business unit is required.',
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        'Counterparty is required.',
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        'Contract value is required.',
       ),
     ).toBeInTheDocument();
 
@@ -52,7 +172,25 @@ describe('ContractReviewForm', () => {
 
     expect(
       screen.getByText(
-        'Required date is required.',
+        'Required by date is required.',
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        'Please select whether personal data is involved.',
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        'Please select the customer type.',
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        'Please select the risk level.',
       ),
     ).toBeInTheDocument();
 
@@ -64,644 +202,474 @@ describe('ContractReviewForm', () => {
 
     expect(
       screen.getByText(
-        'Description is required.',
+        'Description must be at least 20 characters.',
       ),
     ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        'Please upload a contract.',
+      ),
+    ).toBeInTheDocument();
+
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('submits successfully after confirmation', async () => {
-    const user = userEvent.setup();
-    const handleSubmit = vi.fn();
+    const onSubmit = vi.fn();
+    const onSaveDraft = vi.fn();
 
     render(
       <ContractReviewForm
-        onSaveDraft={vi.fn()}
-        onSubmit={handleSubmit}
+        onSubmit={onSubmit}
+        onSaveDraft={onSaveDraft}
       />,
     );
 
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Request Title/i,
-      }),
-      'Employment Contract Review',
-    );
+    await fillValidForm();
 
-    await user.selectOptions(
-      screen.getByRole('combobox', {
-        name: /Contract Type/i,
-      }),
-      'employment',
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Name/i,
-      }),
-      'John Doe',
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Email/i,
-      }),
-      'john@example.com',
-    );
-
-    await user.type(
-      screen.getByLabelText(/Required By/i),
-      '2099-12-31',
-    );
-
-    await user.click(
-      screen.getByRole('radio', {
-        name: /High/i,
-      }),
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Description/i,
-      }),
-      'Please review this employment contract before it is signed.',
-    );
-
-    await user.click(
+    fireEvent.click(
       screen.getByRole('button', {
-        name: 'Submit Request',
+        name: /submit request/i,
       }),
     );
 
     expect(
-      screen.getByRole('dialog'),
+      await screen.findByRole('dialog'),
     ).toBeInTheDocument();
 
-    await user.click(
+    fireEvent.click(
       screen.getByRole('button', {
-        name: 'Confirm Submission',
+        name: /confirm submission/i,
       }),
     );
 
-    expect(
-      screen.getByRole('button', {
-        name: 'Submitting...',
-      }),
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
 
-    await waitFor(
-      () => {
-        expect(handleSubmit).toHaveBeenCalledTimes(1);
-      },
-      {
-        timeout: 5000,
-      },
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestType: 'contract-review',
+        title: 'Review vendor service agreement',
+        contractType: 'vendor',
+        businessUnit: 'Sales',
+        counterparty: 'ABC Corporation',
+        contractValue: '50000',
+        requesterName: 'John Smith',
+        requesterEmail: 'john.smith@example.com',
+        dueDate: '2026-12-31',
+        personalDataInvolved: 'yes',
+        customerType: 'new',
+        riskLevel: 'medium',
+        priority: 'high',
+      }),
     );
   });
 
-  it('saves the current form data as a draft', async () => {
-    const user = userEvent.setup();
-    const handleSaveDraft = vi.fn();
+  it('saves current form data as draft', async () => {
+    const onSubmit = vi.fn();
+    const onSaveDraft = vi.fn();
 
     render(
       <ContractReviewForm
-        onSaveDraft={handleSaveDraft}
-        onSubmit={vi.fn()}
+        onSubmit={onSubmit}
+        onSaveDraft={onSaveDraft}
       />,
     );
 
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Request Title/i,
-      }),
-      'Draft Contract Review',
-    );
+    const user = userEvent.setup();
 
     await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Name/i,
-      }),
-      'Jane Doe',
+      screen.getByLabelText(/request title/i),
+      'Draft contract review',
     );
 
     await user.click(
       screen.getByRole('button', {
-        name: 'Save Draft',
+        name: /save draft/i,
       }),
     );
 
-    expect(
-      handleSaveDraft,
-    ).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(onSaveDraft).toHaveBeenCalledTimes(1);
+    });
 
-    const savedData =
-      handleSaveDraft.mock.calls[0][0];
-
-    expect(savedData.title).toBe(
-      'Draft Contract Review',
+    expect(onSaveDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestType: 'contract-review',
+        title: 'Draft contract review',
+      }),
     );
 
-    expect(savedData.requesterName).toBe(
-      'Jane Doe',
-    );
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('accepts a valid PDF file upload', async () => {
-    const user = userEvent.setup();
-
-    const { container } = render(
+  it('accepts a valid PDF file', async () => {
+    render(
       <ContractReviewForm
-        onSaveDraft={vi.fn()}
         onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
       />,
     );
+
+    const fileInput =
+      document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
 
     const file = new File(
-      ['sample contract content'],
-      'contract.pdf',
+      ['pdf content'],
+      'agreement.pdf',
       {
         type: 'application/pdf',
       },
     );
 
+    await userEvent.upload(fileInput, file);
+
+    expect(
+      screen.getByText('agreement.pdf'),
+    ).toBeInTheDocument();
+  });
+
+  it('accepts a valid DOC file', async () => {
+    render(
+      <ContractReviewForm
+        onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
+      />,
+    );
+
     const fileInput =
-      container.querySelector(
+      document.querySelector(
         'input[type="file"]',
       ) as HTMLInputElement;
 
-    expect(fileInput).toBeInTheDocument();
-
-    await user.upload(
-      fileInput,
-      file,
+    const file = new File(
+      ['doc content'],
+      'agreement.doc',
+      {
+        type: 'application/msword',
+      },
     );
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('contract.pdf'),
-      ).toBeInTheDocument();
-    });
+    await userEvent.upload(fileInput, file);
 
     expect(
-      screen.getByText('23 B'),
+      screen.getByText('agreement.doc'),
+    ).toBeInTheDocument();
+  });
+
+  it('accepts a valid DOCX file', async () => {
+    render(
+      <ContractReviewForm
+        onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
+      />,
+    );
+
+    const fileInput =
+      document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
+
+    const file = new File(
+      ['docx content'],
+      'agreement.docx',
+      {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      },
+    );
+
+    await userEvent.upload(fileInput, file);
+
+    expect(
+      screen.getByText('agreement.docx'),
     ).toBeInTheDocument();
   });
 
   it('rejects an invalid file type', async () => {
-    const { container } = render(
+    render(
       <ContractReviewForm
-        onSaveDraft={vi.fn()}
         onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
       />,
     );
 
-    const invalidFile = new File(
+    const fileInput =
+      document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
+
+    const file = new File(
       ['image content'],
-      'contract.png',
+      'image.png',
       {
         type: 'image/png',
       },
     );
 
-    const fileInput =
-      container.querySelector(
-        'input[type="file"]',
-      ) as HTMLInputElement;
-
-    expect(fileInput).toBeInTheDocument();
-
-    fireEvent.change(
-      fileInput,
-      {
-        target: {
-          files: [invalidFile],
-        },
-      },
-    );
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          'Only PDF, DOC, and DOCX files are allowed.',
-        ),
-      ).toBeInTheDocument();
-    });
+    await userEvent.upload(fileInput, file);
 
     expect(
-      screen.queryByText(
-        'contract.png',
+      screen.getByText(
+        'Only PDF, DOC, and DOCX files are allowed.',
       ),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
   });
 
-  it('rejects a file larger than 10 MB', async () => {
-    const { container } = render(
+  it('rejects files larger than 50 MB', async () => {
+    render(
       <ContractReviewForm
-        onSaveDraft={vi.fn()}
         onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
       />,
     );
 
-    const largeFileContent =
-      new Uint8Array(
-        10 * 1024 * 1024 + 1,
-      );
+    const fileInput =
+      document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
 
     const largeFile = new File(
-      [largeFileContent],
+      ['x'],
       'large-contract.pdf',
       {
         type: 'application/pdf',
       },
     );
 
-    const fileInput =
-      container.querySelector(
-        'input[type="file"]',
-      ) as HTMLInputElement;
-
-    expect(fileInput).toBeInTheDocument();
-
-    fireEvent.change(
-      fileInput,
+    Object.defineProperty(
+      largeFile,
+      'size',
       {
-        target: {
-          files: [largeFile],
-        },
+        value: 50 * 1024 * 1024 + 1,
       },
     );
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          'File size must be 10 MB or less.',
-        ),
-      ).toBeInTheDocument();
-    });
+    await userEvent.upload(
+      fileInput,
+      largeFile,
+    );
 
     expect(
-      screen.queryByText(
-        'large-contract.pdf',
+      screen.getByText(
+        'File size must be 50 MB or less.',
       ),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
   });
 
-  it('removes an uploaded supporting document', async () => {
-    const user = userEvent.setup();
-
-    const { container } = render(
+  it('accepts a file exactly 50 MB', async () => {
+    render(
       <ContractReviewForm
-        onSaveDraft={vi.fn()}
         onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
       />,
     );
 
+    const fileInput =
+      document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
+
     const file = new File(
-      ['sample contract content'],
-      'contract-to-remove.pdf',
+      ['x'],
+      '50mb-contract.pdf',
       {
         type: 'application/pdf',
       },
     );
 
+    Object.defineProperty(
+      file,
+      'size',
+      {
+        value: 50 * 1024 * 1024,
+      },
+    );
+
+    await userEvent.upload(fileInput, file);
+
+    expect(
+      screen.getByText(
+        '50mb-contract.pdf',
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByText(
+        'File size must be 50 MB or less.',
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it('removes an uploaded supporting document', async () => {
+    render(
+      <ContractReviewForm
+        onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
+      />,
+    );
+
     const fileInput =
-      container.querySelector(
+      document.querySelector(
         'input[type="file"]',
       ) as HTMLInputElement;
 
-    expect(fileInput).toBeInTheDocument();
+    const file = new File(
+      ['contract content'],
+      'contract.pdf',
+      {
+        type: 'application/pdf',
+      },
+    );
 
-    await user.upload(
-      fileInput,
-      file,
+    await userEvent.upload(fileInput, file);
+
+    expect(
+      screen.getByText('contract.pdf'),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /remove/i,
+      }),
+    );
+
+    expect(
+      screen.queryByText('contract.pdf'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens the confirmation dialog before submission', async () => {
+    render(
+      <ContractReviewForm
+        onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
+      />,
+    );
+
+    await fillValidForm();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /submit request/i,
+      }),
+    );
+
+    expect(
+      await screen.findByRole('dialog'),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        /are you sure you want to submit/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('cancels the confirmation dialog', async () => {
+    const onSubmit = vi.fn();
+
+    render(
+      <ContractReviewForm
+        onSubmit={onSubmit}
+        onSaveDraft={vi.fn()}
+      />,
+    );
+
+    await fillValidForm();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /submit request/i,
+      }),
+    );
+
+    expect(
+      await screen.findByRole('dialog'),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /cancel/i,
+      }),
     );
 
     await waitFor(() => {
       expect(
-        screen.getByText(
-          'contract-to-remove.pdf',
-        ),
-      ).toBeInTheDocument();
-    });
-
-    const removeButton =
-      screen.getByRole('button', {
-        name: /Remove contract-to-remove.pdf/i,
-      });
-
-    await user.click(removeButton);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByText(
-          'contract-to-remove.pdf',
-        ),
+        screen.queryByRole('dialog'),
       ).not.toBeInTheDocument();
     });
 
-    expect(
-      screen.getByText(
-        'Choose a file or drag and drop',
-      ),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByText(
-        'PDF, DOC, DOCX up to 10MB',
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('opens the confirmation dialog when a valid form is submitted', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <ContractReviewForm
-        onSaveDraft={vi.fn()}
-        onSubmit={vi.fn()}
-      />,
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Request Title/i,
-      }),
-      'Contract Review Request',
-    );
-
-    await user.selectOptions(
-      screen.getByRole('combobox', {
-        name: /Contract Type/i,
-      }),
-      'vendor',
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Name/i,
-      }),
-      'John Doe',
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Email/i,
-      }),
-      'john@example.com',
-    );
-
-    await user.type(
-      screen.getByLabelText(/Required By/i),
-      '2099-12-31',
-    );
-
-    await user.click(
-      screen.getByRole('radio', {
-        name: /Medium/i,
-      }),
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Description/i,
-      }),
-      'Please review this vendor contract carefully.',
-    );
-
-    await user.click(
-      screen.getByRole('button', {
-        name: 'Submit Request',
-      }),
-    );
-
-    expect(
-      screen.getByRole('dialog'),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole('heading', {
-        name: 'Submit Legal Request?',
-      }),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole('button', {
-        name: 'Confirm Submission',
-      }),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole('button', {
-        name: 'Review Request',
-      }),
-    ).toBeInTheDocument();
-  });
-
-  it('cancels the confirmation dialog without submitting', async () => {
-    const user = userEvent.setup();
-    const handleSubmit = vi.fn();
-
-    render(
-      <ContractReviewForm
-        onSaveDraft={vi.fn()}
-        onSubmit={handleSubmit}
-      />,
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Request Title/i,
-      }),
-      'Contract Review Request',
-    );
-
-    await user.selectOptions(
-      screen.getByRole('combobox', {
-        name: /Contract Type/i,
-      }),
-      'nda',
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Name/i,
-      }),
-      'John Doe',
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Email/i,
-      }),
-      'john@example.com',
-    );
-
-    await user.type(
-      screen.getByLabelText(/Required By/i),
-      '2099-12-31',
-    );
-
-    await user.click(
-      screen.getByRole('radio', {
-        name: /Low/i,
-      }),
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Description/i,
-      }),
-      'Please review this NDA before approval.',
-    );
-
-    await user.click(
-      screen.getByRole('button', {
-        name: 'Submit Request',
-      }),
-    );
-
-    expect(
-      screen.getByRole('dialog'),
-    ).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole('button', {
-        name: 'Review Request',
-      }),
-    );
-
-    expect(
-      screen.queryByRole('dialog'),
-    ).not.toBeInTheDocument();
-
-    expect(
-      handleSubmit,
-    ).not.toHaveBeenCalled();
-
-    expect(
-      screen.getByRole('textbox', {
-        name: /Request Title/i,
-      }),
-    ).toHaveValue(
-      'Contract Review Request',
-    );
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('updates the description character counter', async () => {
-    const user = userEvent.setup();
-
     render(
       <ContractReviewForm
-        onSaveDraft={vi.fn()}
         onSubmit={vi.fn()}
+        onSaveDraft={vi.fn()}
       />,
     );
 
-    expect(
-      screen.getByText('0/1000'),
-    ).toBeInTheDocument();
+    const user = userEvent.setup();
 
     const description =
-      screen.getByRole('textbox', {
-        name: /Description/i,
-      });
+      screen.getByLabelText(/description/i);
 
     await user.type(
       description,
-      'Review this contract',
+      'This is a test description.',
     );
 
     expect(
-      screen.getByText('20/1000'),
+      screen.getByText(
+        /27\s*\/\s*2000/i,
+      ),
     ).toBeInTheDocument();
   });
 
-  it('shows the submitting loading state after confirmation', async () => {
-    const user = userEvent.setup();
+  it('shows the submitting loading state', async () => {
+    const onSubmit = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          setTimeout(resolve, 100);
+        }),
+    );
 
     render(
       <ContractReviewForm
+        onSubmit={onSubmit}
         onSaveDraft={vi.fn()}
-        onSubmit={vi.fn()}
       />,
     );
 
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Request Title/i,
-      }),
-      'Loading State Test',
-    );
+    await fillValidForm();
 
-    await user.selectOptions(
-      screen.getByRole('combobox', {
-        name: /Contract Type/i,
-      }),
-      'partnership',
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Name/i,
-      }),
-      'John Doe',
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Requester Email/i,
-      }),
-      'john@example.com',
-    );
-
-    await user.type(
-      screen.getByLabelText(/Required By/i),
-      '2099-12-31',
-    );
-
-    await user.click(
-      screen.getByRole('radio', {
-        name: /High/i,
-      }),
-    );
-
-    await user.type(
-      screen.getByRole('textbox', {
-        name: /Description/i,
-      }),
-      'Testing the loading state during submission.',
-    );
-
-    await user.click(
+    fireEvent.click(
       screen.getByRole('button', {
-        name: 'Submit Request',
-      }),
-    );
-
-    await user.click(
-      screen.getByRole('button', {
-        name: 'Confirm Submission',
+        name: /submit request/i,
       }),
     );
 
     expect(
+      await screen.findByRole('dialog'),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
       screen.getByRole('button', {
-        name: 'Submitting...',
+        name: /confirm submission/i,
       }),
-    ).toBeDisabled();
+    );
 
     expect(
-      screen.getByRole('button', {
-        name: 'Save Draft',
+      await screen.findByRole('button', {
+        name: /submitting/i,
       }),
     ).toBeDisabled();
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', {
-          name: 'Submit Request',
-        }),
-      ).toBeInTheDocument();
-    });
   });
 });
+
 

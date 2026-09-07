@@ -1,7 +1,9 @@
+import type { LucideIcon } from 'lucide-react';
+
 interface RequestTypeCardProps {
   title: string;
   description: string;
-  icon: string;
+  icon: LucideIcon;
   selected: boolean;
   onClick: () => void;
 }
@@ -9,7 +11,7 @@ interface RequestTypeCardProps {
 function RequestTypeCard({
   title,
   description,
-  icon,
+  icon: Icon,
   selected,
   onClick,
 }: RequestTypeCardProps) {
@@ -23,7 +25,7 @@ function RequestTypeCard({
       aria-pressed={selected}
     >
       <span className="request-type-icon" aria-hidden="true">
-        {icon}
+        <Icon size={20} strokeWidth={2} />
       </span>
 
       <span className="request-type-content">

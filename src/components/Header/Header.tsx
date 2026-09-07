@@ -1,3 +1,12 @@
+import {
+  Bell,
+  CircleHelp,
+  Settings,
+  User,
+  LogOut,
+  Scale,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 type OpenMenu =
@@ -44,13 +53,17 @@ function Header() {
   };
 
   return (
-    <header className="app-header" ref={headerRef}>
+    <header
+      className="app-header"
+      ref={headerRef}
+    >
+      {/* Brand */}
       <div className="header-left">
         <div
           className="logo-mark"
           aria-hidden="true"
         >
-          ⚖
+          <Scale size={25} strokeWidth={2} />
         </div>
 
         <div>
@@ -59,21 +72,32 @@ function Header() {
           </h1>
 
           <p className="header-subtitle">
-            Legal Request Management
+            Submit legal requests and track their
+            progress
           </p>
         </div>
       </div>
 
+      {/* Header actions */}
       <div className="header-actions">
+        {/* Help */}
         <div className="header-menu-wrapper">
           <button
             type="button"
             className="header-action"
             aria-label="Open help"
-            aria-expanded={openMenu === 'help'}
+            aria-expanded={
+              openMenu === 'help'
+            }
             onClick={() => toggleMenu('help')}
           >
-            ?
+            <CircleHelp
+              size={20}
+              strokeWidth={2}
+            />
+            <span className="header-action-label">
+              Help
+            </span>
           </button>
 
           {openMenu === 'help' && (
@@ -83,7 +107,13 @@ function Header() {
               aria-label="Help information"
             >
               <div className="dropdown-heading">
-                <h2>Need Help?</h2>
+                <div>
+                  <h2>Need Help?</h2>
+
+                  <p>
+                    Legal request guidance
+                  </p>
+                </div>
 
                 <button
                   type="button"
@@ -93,18 +123,20 @@ function Header() {
                     setOpenMenu(null)
                   }
                 >
-                  ×
+                  <X size={18} />
                 </button>
               </div>
 
-              <p>
+              <p className="help-intro">
                 Complete the legal request form and
                 provide as much relevant information as
                 possible.
               </p>
 
               <div className="help-item">
-                <strong>Contract Review</strong>
+                <strong>
+                  Contract Review
+                </strong>
 
                 <span>
                   Use this option when you need a
@@ -113,26 +145,32 @@ function Header() {
               </div>
 
               <div className="help-item">
-                <strong>Required fields</strong>
+                <strong>
+                  Required fields
+                </strong>
 
                 <span>
-                  Fields marked with an asterisk (*) must
-                  be completed before submission.
+                  Fields marked with an asterisk (*)
+                  must be completed before
+                  submission.
                 </span>
               </div>
 
               <div className="help-item">
-                <strong>Supporting documents</strong>
+                <strong>
+                  Supporting documents
+                </strong>
 
                 <span>
-                  PDF, DOC, and DOCX files up to 10 MB are
-                  supported.
+                  PDF, DOC, and DOCX files up to
+                  50 MB are supported.
                 </span>
               </div>
             </div>
           )}
         </div>
 
+        {/* Notifications */}
         <div className="header-menu-wrapper">
           <button
             type="button"
@@ -145,7 +183,10 @@ function Header() {
               toggleMenu('notifications')
             }
           >
-            🔔
+            <Bell
+              size={20}
+              strokeWidth={2}
+            />
 
             <span
               className="notification-badge"
@@ -162,7 +203,13 @@ function Header() {
               aria-label="Notifications"
             >
               <div className="dropdown-heading">
-                <h2>Notifications</h2>
+                <div>
+                  <h2>Notifications</h2>
+
+                  <p>
+                    Your latest updates
+                  </p>
+                </div>
 
                 <button
                   type="button"
@@ -172,12 +219,15 @@ function Header() {
                     setOpenMenu(null)
                   }
                 >
-                  ×
+                  <X size={18} />
                 </button>
               </div>
 
               <div className="notification-item">
-                <span className="notification-dot" />
+                <span
+                  className="notification-dot"
+                  aria-hidden="true"
+                />
 
                 <div>
                   <strong>
@@ -185,14 +235,17 @@ function Header() {
                   </strong>
 
                   <p>
-                    The legal team is available to review
-                    new requests.
+                    The legal team is available
+                    to review new requests.
                   </p>
                 </div>
               </div>
 
               <div className="notification-item">
-                <span className="notification-dot" />
+                <span
+                  className="notification-dot"
+                  aria-hidden="true"
+                />
 
                 <div>
                   <strong>
@@ -200,14 +253,17 @@ function Header() {
                   </strong>
 
                   <p>
-                    Remember to attach relevant documents
-                    to your request.
+                    Remember to attach relevant
+                    documents to your request.
                   </p>
                 </div>
               </div>
 
               <div className="notification-item">
-                <span className="notification-dot" />
+                <span
+                  className="notification-dot"
+                  aria-hidden="true"
+                />
 
                 <div>
                   <strong>
@@ -224,28 +280,33 @@ function Header() {
           )}
         </div>
 
+        {/* Profile */}
         <div className="header-menu-wrapper">
           <button
             type="button"
             className="profile-button"
             aria-label="Open user profile menu"
-            aria-expanded={openMenu === 'profile'}
-            onClick={() => toggleMenu('profile')}
+            aria-expanded={
+              openMenu === 'profile'
+            }
+            onClick={() =>
+              toggleMenu('profile')
+            }
           >
             <span
               className="profile-avatar"
               aria-hidden="true"
             >
-              JD
+              JS
             </span>
 
             <span className="profile-info">
               <span className="profile-name">
-                John Doe
+                John Smith
               </span>
 
               <span className="profile-role">
-                Requester
+                Sales Department
               </span>
             </span>
 
@@ -268,13 +329,17 @@ function Header() {
                   className="profile-avatar profile-avatar-large"
                   aria-hidden="true"
                 >
-                  JD
+                  JS
                 </span>
 
                 <div>
-                  <strong>John Doe</strong>
+                  <strong>
+                    John Smith
+                  </strong>
 
-                  <span>Requester</span>
+                  <span>
+                    Sales Department
+                  </span>
                 </div>
               </div>
 
@@ -285,11 +350,17 @@ function Header() {
                 className="profile-menu-item"
                 role="menuitem"
                 onClick={() =>
-                  alert('Profile page coming soon.')
+                  alert(
+                    'Profile page coming soon.',
+                  )
                 }
               >
-                <span aria-hidden="true">👤</span>
-                Profile
+                <User
+                  size={17}
+                  aria-hidden="true"
+                />
+
+                <span>Profile</span>
               </button>
 
               <button
@@ -297,11 +368,17 @@ function Header() {
                 className="profile-menu-item"
                 role="menuitem"
                 onClick={() =>
-                  alert('Settings page coming soon.')
+                  alert(
+                    'Settings page coming soon.',
+                  )
                 }
               >
-                <span aria-hidden="true">⚙</span>
-                Settings
+                <Settings
+                  size={17}
+                  aria-hidden="true"
+                />
+
+                <span>Settings</span>
               </button>
 
               <button
@@ -309,11 +386,17 @@ function Header() {
                 className="profile-menu-item profile-menu-item-danger"
                 role="menuitem"
                 onClick={() =>
-                  alert('Sign out functionality coming soon.')
+                  alert(
+                    'Sign out functionality coming soon.',
+                  )
                 }
               >
-                <span aria-hidden="true">↪</span>
-                Sign out
+                <LogOut
+                  size={17}
+                  aria-hidden="true"
+                />
+
+                <span>Sign out</span>
               </button>
             </div>
           )}
@@ -324,3 +407,4 @@ function Header() {
 }
 
 export default Header;
+
