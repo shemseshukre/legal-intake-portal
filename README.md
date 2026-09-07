@@ -338,3 +338,7 @@ This project was developed as a practical React and TypeScript implementation ex
 ## Author
 
 Developed as part of a React Developer technical assessment.
+
+## ScreenShoot
+![ScreenShoot](image.png)
+![ScreenShoot](image-1.png)
