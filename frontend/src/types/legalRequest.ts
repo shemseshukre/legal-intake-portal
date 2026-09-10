@@ -19,6 +19,7 @@ export type ContractType =
   | 'vendor'
   | 'nda'
   | 'partnership'
+  | 'master-service-agreement'
   | 'other';
 
 export type CustomerType =

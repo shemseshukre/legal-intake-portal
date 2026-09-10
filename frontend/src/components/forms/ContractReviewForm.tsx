@@ -530,7 +530,7 @@ function ContractReviewForm({
             error={errors.description}
             required
             placeholder="Describe your legal request..."
-            maxLength={2000}
+            minLength={20}
           />
         </section>
 
