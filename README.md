@@ -96,17 +96,17 @@ The backend stores file metadata together with the legal request, including:
 * MIME type
 * File size
 
-### Backend API
+## Backend API
 
 The application includes a Node.js and Express backend that provides API endpoints for legal requests.
 
-Main endpoints include:
+### Main Endpoints
 
 ```text
-GET    /api/health
-GET    /api/legal-requests
-GET    /api/legal-requests/:id
-POST   /api/legal-requests
+GET  /api/health
+GET  /api/legal-requests
+GET  /api/legal-requests/:id
+POST /api/legal-requests
 ```
 
 The health endpoint can be used to verify that the backend is running:
@@ -115,7 +115,17 @@ The health endpoint can be used to verify that the backend is running:
 http://localhost:8000/api/health
 ```
 
-### MySQL Database
+A successful response is similar to:
+
+```json
+{
+  "success": true,
+  "message": "Legal Intake Portal backend is running",
+  "port": "8000"
+}
+```
+
+## MySQL Database
 
 The backend uses **MySQL 8.4** for persistent storage.
 
@@ -133,7 +143,7 @@ The database schema is initialized automatically using:
 database/init.sql
 ```
 
-### Dockerized Application
+## Dockerized Application
 
 The complete application is containerized using **Docker and Docker Compose**.
 
@@ -148,32 +158,43 @@ phpMyAdmin
 
 The frontend is served through **Nginx**, which also proxies API requests to the backend.
 
-The architecture is:
+### Docker Architecture
 
 ```text
-Browser
-   |
-   v
-Nginx / React Frontend
-   |
-   v
-Node.js / Express Backend
-   |
-   v
-MySQL Database
+                    Web Browser
+                         |
+                         v
+              Nginx / React Frontend
+                    Port 80
+                         |
+                       /api
+                         |
+                         v
+              Node.js / Express API
+                    Port 8000
+                         |
+                         v
+                  MySQL 8.4
+                legal_intake
+                         ^
+                         |
+                   phpMyAdmin
+                    Port 8080
 ```
 
 Uploaded documents and MySQL data are stored using persistent Docker volumes.
 
 ## Application URLs
 
-When running the application with Docker Compose:
+When the application is running with Docker Compose:
 
 ### Frontend
 
 ```text
 http://localhost/
 ```
+
+This is the main Legal Intake Portal.
 
 ### Backend Health Check
 
@@ -189,15 +210,23 @@ The MySQL container is exposed locally on:
 localhost:3307
 ```
 
+The application itself connects to MySQL internally through the Docker Compose network.
+
 ### phpMyAdmin
 
-phpMyAdmin is available at:
+phpMyAdmin is intended to be available at:
 
 ```text
 http://localhost:8080/
 ```
 
-phpMyAdmin connects to the MySQL service inside the Docker Compose network.
+phpMyAdmin connects to the MySQL container using the Docker Compose service name:
+
+```text
+mysql
+```
+
+phpMyAdmin is provided as a database administration tool and is **not required to use the Legal Intake Portal itself**.
 
 ## Technology Stack
 
@@ -244,14 +273,11 @@ legal-intake-portal/
 │   │   ├── components/
 │   │   │   ├── ConfirmationDialog.tsx
 │   │   │   ├── FeedbackMessage.tsx
-│   │   │   │
 │   │   │   ├── Header/
 │   │   │   │   └── Header.tsx
-│   │   │   │
 │   │   │   ├── RequestTypeSidebar/
 │   │   │   │   ├── RequestTypeCard.tsx
 │   │   │   │   └── RequestTypeSidebar.tsx
-│   │   │   │
 │   │   │   └── forms/
 │   │   │       ├── ContractReviewForm.tsx
 │   │   │       ├── ContractReviewForm.test.tsx
@@ -290,19 +316,14 @@ legal-intake-portal/
 │   ├── src/
 │   │   ├── config/
 │   │   │   └── database.ts
-│   │   │
 │   │   ├── controllers/
 │   │   │   └── legalRequestController.ts
-│   │   │
 │   │   ├── middleware/
 │   │   │   └── upload.ts
-│   │   │
 │   │   ├── models/
 │   │   │   └── legalRequestModel.ts
-│   │   │
 │   │   ├── routes/
 │   │   │   └── legalRequestRoutes.ts
-│   │   │
 │   │   └── server.ts
 │   │
 │   ├── Dockerfile
@@ -320,7 +341,7 @@ legal-intake-portal/
 └── README.md
 ```
 
-## Getting Started
+# Getting Started
 
 There are two ways to run the application:
 
@@ -329,23 +350,161 @@ There are two ways to run the application:
 
 For evaluating the complete full-stack application, **Docker Compose is recommended**.
 
-## Local Development
+## Recommended: Run the Complete Full Stack with Docker
 
 ### Prerequisites
 
-Make sure the following are installed:
+Install the following:
 
-* Node.js
-* npm
+* Docker Desktop
 * Git
-* MySQL
 
-### Clone the Repository
+Make sure Docker Desktop is running before starting the application.
+
+### Step 1 — Clone the Repository
 
 ```bash
 git clone https://github.com/shemseshukre/legal-intake-portal.git
 cd legal-intake-portal
 ```
+
+### Step 2 — Build and Start the Application
+
+From the project root, run:
+
+```bash
+docker compose up -d --build
+```
+
+This command builds and starts:
+
+```text
+legal-intake-frontend
+legal-intake-backend
+legal-intake-mysql
+legal-intake-phpmyadmin
+```
+
+The `--build` option ensures that the frontend and backend Docker images are built from the latest source code.
+
+### Step 3 — Check the Containers
+
+Run:
+
+```bash
+docker compose ps
+```
+
+The services should show a running status.
+
+### Step 4 — Open the Application
+
+Open the following address in a web browser:
+
+```text
+http://localhost/
+```
+
+The Legal Intake Portal should now be available.
+
+### Step 5 — Verify the Backend
+
+Open:
+
+```text
+http://localhost:8000/api/health
+```
+
+A successful response confirms that the Express backend is running.
+
+### Step 6 — Open phpMyAdmin
+
+If the phpMyAdmin container is running, open:
+
+```text
+http://localhost:8080/
+```
+
+Use the following connection information:
+
+```text
+Server: mysql
+Username: root
+Password: leave empty
+```
+
+phpMyAdmin is optional and is only used for inspecting and managing the MySQL database.
+
+### Step 7 — Stop the Application
+
+To stop the containers:
+
+```bash
+docker compose down
+```
+
+The named Docker volumes are preserved.
+
+To remove the containers **and** persistent database/upload volumes:
+
+```bash
+docker compose down -v
+```
+
+**Warning:** `docker compose down -v` deletes the persistent MySQL and uploaded-file data stored in the Docker volumes.
+
+## Docker Troubleshooting
+
+### Check Running Containers
+
+```bash
+docker compose ps
+```
+
+### View All Service Logs
+
+```bash
+docker compose logs
+```
+
+### View Backend Logs
+
+```bash
+docker compose logs backend
+```
+
+### View Frontend Logs
+
+```bash
+docker compose logs frontend
+```
+
+### View MySQL Logs
+
+```bash
+docker compose logs mysql
+```
+
+### View phpMyAdmin Logs
+
+```bash
+docker compose logs phpmyadmin
+```
+
+If phpMyAdmin is unavailable, the main Legal Intake Portal can still be used as long as the **frontend, backend, and MySQL** services are running.
+
+## Local Development
+
+Docker Compose is recommended for assessment and demonstration. Local development can also be performed without Docker.
+
+### Prerequisites
+
+Install:
+
+* Node.js
+* npm
+* Git
+* MySQL
 
 ### Frontend Installation
 
@@ -401,59 +560,13 @@ The backend normally runs at:
 http://localhost:8000
 ```
 
-## Running with Docker
-
-Docker Compose is the recommended way to run the complete full-stack application.
-
-From the project root:
-
-```bash
-docker compose up -d
-```
-
-Check the running containers:
-
-```bash
-docker compose ps
-```
-
-The expected services are:
-
-```text
-legal-intake-frontend
-legal-intake-backend
-legal-intake-mysql
-legal-intake-phpmyadmin
-```
-
-Open the application:
-
-```text
-http://localhost/
-```
-
-Open phpMyAdmin:
-
-```text
-http://localhost:8080/
-```
-
-Stop the application:
-
-```bash
-docker compose down
-```
-
-The MySQL database and uploaded files are stored in persistent Docker volumes.
-
 ## Running Tests
 
 The frontend uses **Vitest** and **React Testing Library**.
 
-Run the test suite:
+From the `frontend` directory:
 
 ```bash
-cd frontend
 npm test -- --run
 ```
 
@@ -580,9 +693,9 @@ Submitted requests are sent to the Express backend and persisted in MySQL.
 
 ### Uploaded Documents
 
-Uploaded documents are processed by Multer and stored in the backend's uploads directory.
+Uploaded documents are processed by Multer and stored in the backend's `uploads` directory.
 
-Docker uses a persistent volume:
+Docker uses the persistent volume:
 
 ```text
 uploads_data
@@ -685,20 +798,20 @@ The Docker Compose environment consists of four services:
                ▼
 ┌─────────────────────────────┐
 │       Nginx / Frontend      │
-│      React Application      │
+│      React Application       │
 └──────────────┬──────────────┘
                │
                │ /api
                ▼
 ┌─────────────────────────────┐
 │    Node.js / Express API    │
-│          Port 8000          │
+│         Port 8000           │
 └──────────────┬──────────────┘
                │
                ▼
 ┌─────────────────────────────┐
-│         MySQL 8.4           │
-│        legal_intake         │
+│          MySQL 8.4          │
+│         legal_intake        │
 └─────────────────────────────┘
 
 ┌─────────────────────────────┐
@@ -707,7 +820,7 @@ The Docker Compose environment consists of four services:
 └──────────────┬──────────────┘
                │
                ▼
-          MySQL 8.4
+            MySQL 8.4
 ```
 
 ## Future Improvements
@@ -757,9 +870,10 @@ The project was subsequently extended into a full-stack application with a Node.
 ## Screenshots
 
 ### Legal Intake Portal
-### Contract Review Form
 
+### Contract Review Form
 ![Legal Intake Portal](screenshot-1.png)
+
 ![Contract Review Form](screenshot-2.png)
 
 ## Author
@@ -768,6 +882,6 @@ Developed by **Shemse Shukre** as part of a React Developer technical assessment
 
 ## Repository
 
-GitHub:
+GitHub repository:
 
-https://github.com/shemseshukre/legal-intake-portal
+`https://github.com/shemseshukre/legal-intake-portal`
