@@ -8,7 +8,7 @@ import {
 
 export async function getLegalRequests(
   _req: Request,
-  res: Response
+  res: Response,
 ) {
   try {
     const requests = await getAllLegalRequests();
@@ -20,7 +20,7 @@ export async function getLegalRequests(
   } catch (error) {
     console.error(
       "Error fetching legal requests:",
-      error
+      error,
     );
 
     res.status(500).json({
@@ -36,7 +36,7 @@ export async function getLegalRequests(
 
 export async function getLegalRequest(
   req: Request,
-  res: Response
+  res: Response,
 ) {
   try {
     const id = Number(req.params.id);
@@ -69,7 +69,7 @@ export async function getLegalRequest(
   } catch (error) {
     console.error(
       "Error fetching legal request:",
-      error
+      error,
     );
 
     res.status(500).json({
@@ -85,7 +85,7 @@ export async function getLegalRequest(
 
 export async function createLegalRequestHandler(
   req: Request,
-  res: Response
+  res: Response,
 ) {
   try {
     const {
@@ -122,6 +122,8 @@ export async function createLegalRequestHandler(
       return;
     }
 
+    const file = req.file;
+
     const result = await createLegalRequest({
       request_title,
       business_unit,
@@ -135,17 +137,34 @@ export async function createLegalRequestHandler(
       priority,
       description,
       status,
+
+      file_original_name: file?.originalname ?? null,
+      file_stored_name: file?.filename ?? null,
+      file_path: file?.path ?? null,
+      file_mime_type: file?.mimetype ?? null,
+      file_size: file?.size ?? null,
     });
 
     res.status(201).json({
       success: true,
       message: "Legal request created successfully",
-      data: result,
+      data: {
+        ...result,
+        file: file
+          ? {
+              originalName: file.originalname,
+              storedName: file.filename,
+              path: file.path,
+              mimeType: file.mimetype,
+              size: file.size,
+            }
+          : null,
+      },
     });
   } catch (error) {
     console.error(
       "Error creating legal request:",
-      error
+      error,
     );
 
     res.status(500).json({

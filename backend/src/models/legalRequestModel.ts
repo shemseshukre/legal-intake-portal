@@ -14,29 +14,38 @@ export interface LegalRequest {
   priority: string;
   description: string;
   status?: string;
+
+  file_original_name?: string | null;
+  file_stored_name?: string | null;
+  file_path?: string | null;
+  file_mime_type?: string | null;
+  file_size?: number | null;
+
   created_at?: Date;
   updated_at?: Date;
 }
 
 export async function getAllLegalRequests() {
   const [rows] = await pool.query(
-    "SELECT * FROM legal_requests ORDER BY created_at DESC"
+    "SELECT * FROM legal_requests ORDER BY created_at DESC",
   );
 
   return rows;
 }
 
-export async function getLegalRequestById(id: number) {
+export async function getLegalRequestById(
+  id: number,
+) {
   const [rows] = await pool.query(
     "SELECT * FROM legal_requests WHERE id = ?",
-    [id]
+    [id],
   );
 
   return rows;
 }
 
 export async function createLegalRequest(
-  request: LegalRequest
+  request: LegalRequest,
 ) {
   const [result] = await pool.query(
     `INSERT INTO legal_requests
@@ -52,9 +61,14 @@ export async function createLegalRequest(
       risk_level,
       priority,
       description,
-      status
+      status,
+      file_original_name,
+      file_stored_name,
+      file_path,
+      file_mime_type,
+      file_size
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       request.request_title,
       request.business_unit,
@@ -68,7 +82,13 @@ export async function createLegalRequest(
       request.priority,
       request.description,
       request.status ?? "submitted",
-    ]
+
+      request.file_original_name ?? null,
+      request.file_stored_name ?? null,
+      request.file_path ?? null,
+      request.file_mime_type ?? null,
+      request.file_size ?? null,
+    ],
   );
 
   return result;

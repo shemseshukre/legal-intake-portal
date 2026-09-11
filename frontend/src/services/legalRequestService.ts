@@ -16,7 +16,8 @@ export interface SavedDraft {
   updatedAt: string;
 }
 
-export interface SubmittedRequest extends LegalRequest {
+export interface SubmittedRequest
+  extends LegalRequest {
   id: string;
   submittedAt: string;
 }
@@ -72,28 +73,80 @@ export function saveLegalRequestDraft(
 export async function submitLegalRequest(
   data: LegalRequest,
 ): Promise<SubmittedRequest> {
+  const formData = new FormData();
+
+  formData.append(
+    'request_title',
+    data.title,
+  );
+
+  formData.append(
+    'business_unit',
+    data.businessUnit,
+  );
+
+  formData.append(
+    'counterparty',
+    data.counterparty,
+  );
+
+  formData.append(
+    'contract_type',
+    data.contractType,
+  );
+
+  formData.append(
+    'contract_value',
+    data.contractValue,
+  );
+
+  formData.append(
+    'required_by_date',
+    data.dueDate,
+  );
+
+  formData.append(
+    'personal_data_involved',
+    data.personalDataInvolved,
+  );
+
+  formData.append(
+    'customer_type',
+    data.customerType,
+  );
+
+  formData.append(
+    'risk_level',
+    data.riskLevel,
+  );
+
+  formData.append(
+    'priority',
+    data.priority,
+  );
+
+  formData.append(
+    'description',
+    data.description,
+  );
+
+  formData.append(
+    'status',
+    'submitted',
+  );
+
+  if (data.file) {
+    formData.append(
+      'file',
+      data.file,
+    );
+  }
+
   const response = await fetch(
     `${API_URL}/legal-requests`,
     {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        request_title: data.title,
-        business_unit: data.businessUnit,
-        counterparty: data.counterparty,
-        contract_type: data.contractType,
-        contract_value: data.contractValue,
-        required_by_date: data.dueDate,
-        personal_data_involved:
-          data.personalDataInvolved,
-        customer_type: data.customerType,
-        risk_level: data.riskLevel,
-        priority: data.priority,
-        description: data.description,
-        status: 'submitted',
-      }),
+      body: formData,
     },
   );
 

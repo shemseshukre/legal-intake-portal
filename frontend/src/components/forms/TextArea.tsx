@@ -4,6 +4,7 @@ interface TextAreaProps {
   value: string;
   placeholder?: string;
   maxLength?: number;
+  minLength?: number;
   required?: boolean;
   error?: string;
   onChange: (value: string) => void;
@@ -15,6 +16,7 @@ function TextArea({
   value,
   placeholder,
   maxLength,
+  minLength,
   required = false,
   error,
   onChange,
@@ -45,6 +47,7 @@ function TextArea({
         value={value}
         placeholder={placeholder}
         maxLength={maxLength}
+        minLength={minLength}
         required={required}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
@@ -64,3 +67,4 @@ function TextArea({
 }
 
 export default TextArea;
+

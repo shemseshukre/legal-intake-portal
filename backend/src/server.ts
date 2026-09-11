@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import legalRequestRoutes from "./routes/legalRequestRoutes.js";
 
 dotenv.config();
@@ -10,7 +11,18 @@ const PORT = process.env.PORT || 8000;
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/legal-requests", legalRequestRoutes);
+
+app.use(
+  "/uploads",
+  express.static(
+    path.join(process.cwd(), "uploads"),
+  ),
+);
+
+app.use(
+  "/api/legal-requests",
+  legalRequestRoutes,
+);
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -21,5 +33,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+  console.log(
+    `Backend server running on http://localhost:${PORT}`,
+  );
 });
